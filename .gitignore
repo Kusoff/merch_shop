@@ -2,7 +2,7 @@
 *.pyc
 __pycache__/
 
-# Virtualenv
+# Virtual environment
 venv/
 env/
 
@@ -11,5 +11,26 @@ env/
 /staticfiles/
 /media/
 
-# VSCode
+# IDEs
 .vscode/
+.idea/
+*.iml
+
+# Byte-compiled / optimized / DLL files
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Pytest cache
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# Coverage reports
+.coverage
+htmlcov/
