@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'shop',
+    'orders',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +129,5 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     )
 }
+
+AUTH_USER_MODEL = 'shop.Users'
