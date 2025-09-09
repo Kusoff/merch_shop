@@ -36,8 +36,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_filters',
     'shop',
     'orders',
+    'django_extensions',
+
 ]
 
 MIDDLEWARE = [
@@ -131,3 +134,6 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'shop.Users'
+
+AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
+

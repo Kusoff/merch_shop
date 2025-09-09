@@ -1,14 +1,15 @@
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
+from rest_framework.permissions import AllowAny
 from .models import Users, Category, Product, Basket, Discount_For_Product_Category, Comments, Characteristic, \
     Product_Images
 from orders.models import Order
 from .serializers import (
     UsersSerializer, CategorySerializer, ProductSerializer, BasketSerializer,
     DiscountSerializer, CommentsSerializer, CharacteristicSerializer, ProductImagesSerializer,
-    OrderSerializer
+    OrderSerializer, UserRegisterSerializer
 )
 
 
@@ -55,3 +56,9 @@ class ProductImagesViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = Users.objects.all()
+    serializer_class = UserRegisterSerializer
+    permission_classes = [AllowAny]

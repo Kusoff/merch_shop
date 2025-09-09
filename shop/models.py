@@ -1,4 +1,4 @@
-from autoslug import AutoSlugField
+from autoslug.fields import AutoSlugField
 from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
 from django.db import models
@@ -7,10 +7,12 @@ from django.utils.timezone import now
 from django.conf import settings
 from sortedm2m.fields import SortedManyToManyField
 
+from django.utils.text import slugify
+
 
 class Users(AbstractUser):
-    phone = models.CharField(max_length=20, verbose_name="Телефон", unique=True, blank=True)
-    slug = AutoSlugField(populate_from='username', unique=True, db_index=True, verbose_name='URL')
+    phone = models.CharField(max_length=20, verbose_name="Телефон", unique=True, blank=False)
+    slug = models.SlugField(max_length=150, unique=True, db_index=True, verbose_name='URL', blank=True)
     birthday = models.DateField(verbose_name='Дата рождения', blank=True, null=True)
     is_verified_email = models.BooleanField(default=False)
     address = models.CharField(max_length=150, blank=True, verbose_name='Адрес')
@@ -19,6 +21,11 @@ class Users(AbstractUser):
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.username)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.username

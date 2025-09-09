@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Users, Category, Characteristic, Product_Images, Product, Basket, Discount_For_Product_Category, \
     Comments
 from orders.models import Order
+from django.contrib.auth.hashers import make_password
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -74,3 +75,15 @@ class OrderSerializer(serializers.ModelSerializer):
             'id', 'first_name', 'last_name', 'email', 'address', 'basket_history',
             'created', 'status', 'initiator'
         ]
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Users
+        fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name')
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return super().create(validated_data)
