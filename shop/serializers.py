@@ -43,11 +43,25 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class BasketSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
+    # Для POST будем принимать product_id
+    product_id = serializers.IntegerField(write_only=True, required=True)
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_price = serializers.ReadOnlyField(source='product.last_price')
+    sum = serializers.SerializerMethodField()
 
     class Meta:
         model = Basket
-        fields = ['id', 'user', 'product', 'quantity', 'created_timestamp', 'sum']
+        fields = ('id', 'product_id', 'product_name', 'product_price', 'quantity', 'sum')
+
+    def get_sum(self, obj):
+        return obj.sum()
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        product_id = validated_data.get('product_id')
+
+        basket, created = Basket.create_or_update(product_id, user)
+        return basket
 
 
 class DiscountSerializer(serializers.ModelSerializer):
@@ -55,7 +69,15 @@ class DiscountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Discount_For_Product_Category
-        fields = ['id', 'category_name', 'discount_percentage', 'discount_start_date', 'discount_end_date', 'slug']
+        fields = '__all__'
+        read_only_fields = ['initiator', 'basket_history', 'status']
+
+    def create(self, validated_data):
+        validated_data['initiator'] = self.context['request'].user
+        order = super().create(validated_data)
+        # можно сразу сохранить корзину в history
+        order.update_after_payment()
+        return order
 
 
 class CommentsSerializer(serializers.ModelSerializer):

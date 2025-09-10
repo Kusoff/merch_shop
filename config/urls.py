@@ -18,6 +18,9 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('', include('shop.urls')),
     path('admin/', admin.site.urls),
+
+    # Весь API под /api/
+    path('api/', include('shop.urls')),    # магазин
+    path('api/', include('orders.urls')),  # заказы
 ]
