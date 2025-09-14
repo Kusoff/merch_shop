@@ -2,13 +2,30 @@ from rest_framework import serializers
 from .models import Users, Category, Characteristic, Product_Images, Product, Basket, Discount_For_Product_Category, \
     Comments
 from orders.models import Order
-from django.contrib.auth.hashers import make_password
 
 
 class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ['id', 'username', 'email', 'phone', 'slug', 'birthday', 'is_verified_email', 'address', 'user_photo']
+        fields = [
+            'id', 'username', 'email', 'phone', 'slug', 'birthday',
+            'is_verified_email', 'address', 'user_photo', 'first_name', 'last_name'
+        ]
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = Users
+        fields = ['username', 'password', 'phone', 'email', 'first_name', 'last_name']
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = Users(**validated_data)
+        user.set_password(password)  # хэшируем пароль
+        user.save()
+        return user
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -85,7 +102,7 @@ class CommentsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comments
-        fields = ['id', 'user', 'product', 'text', 'rating', 'date']
+        fields = ['id', 'user', 'product', 'text', 'rating', 'created']
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -97,15 +114,3 @@ class OrderSerializer(serializers.ModelSerializer):
             'id', 'first_name', 'last_name', 'email', 'address', 'basket_history',
             'created', 'status', 'initiator'
         ]
-
-
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = Users
-        fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name')
-
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super().create(validated_data)

@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
+    'drf_spectacular',
     'shop',
     'orders',
     'django_extensions',
@@ -130,10 +131,17 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 AUTH_USER_MODEL = 'shop.Users'
 
 AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Merch Shop API',
+    'DESCRIPTION': 'API for Shop and Orders',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

@@ -1,8 +1,7 @@
-from django.shortcuts import render
-
 # Create your views here.
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, generics, permissions, status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
@@ -10,13 +9,35 @@ from .models import Users, Category, Product, Basket, Discount_For_Product_Categ
     Product_Images
 from .serializers import (
     UsersSerializer, CategorySerializer, ProductSerializer, BasketSerializer,
-    DiscountSerializer, CommentsSerializer, CharacteristicSerializer, ProductImagesSerializer, UserRegisterSerializer
+    DiscountSerializer, CommentsSerializer, CharacteristicSerializer, ProductImagesSerializer,
+    RegisterSerializer
 )
 
 
 class UsersViewSet(viewsets.ModelViewSet):
-    queryset = Users.objects.all()
     serializer_class = UsersSerializer
+    queryset = Users.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            # Админ видит всех
+            return Users.objects.all()
+        # Обычный пользователь видит только себя
+        return Users.objects.filter(id=user.id)
+
+    @extend_schema(description="Список всех пользователей (только для админов)")
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_permissions(self):
+        if self.request.method in ['POST', 'DELETE']:
+            # Создание и удаление разрешены только админам
+            permission_classes = [IsAdminUser]
+        else:
+            # GET и PUT для своего профиля
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -93,5 +114,17 @@ class ProductImagesViewSet(viewsets.ModelViewSet):
 
 class RegisterView(generics.CreateAPIView):
     queryset = Users.objects.all()
-    serializer_class = UserRegisterSerializer
+    serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+
+    @extend_schema(
+        description="Регистрация нового пользователя",
+        request=RegisterSerializer,
+        responses=UsersSerializer
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        output_serializer = UsersSerializer(user)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)

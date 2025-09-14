@@ -6,4 +6,10 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
-        read_only_fields = ('initiator', 'status', 'created', 'basket_history')
+        read_only_fields = (
+            'initiator',       # кто сделал заказ
+            'status',          # статус заказа (создан/оплачен/доставлен)
+            'created',         # дата создания
+            'basket_history',  # содержимое корзины при оформлении
+        )
+

@@ -92,3 +92,5 @@ class CommentsAdmin(admin.ModelAdmin):
     list_display = ('user', 'product', 'rating', 'created')
     search_fields = ('user__username', 'product__name', 'text')
     list_filter = ('rating',)
+
+

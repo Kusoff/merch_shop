@@ -9,14 +9,25 @@ from sortedm2m.fields import SortedManyToManyField
 
 from django.utils.text import slugify
 
+from django.contrib.auth.models import AbstractUser
+from django.utils.text import slugify
+from django.db import models
+
 
 class Users(AbstractUser):
-    phone = models.CharField(max_length=20, verbose_name="Телефон", unique=True, blank=False)
-    slug = models.SlugField(max_length=150, unique=True, db_index=True, verbose_name='URL', blank=True)
-    birthday = models.DateField(verbose_name='Дата рождения', blank=True, null=True)
+    phone = models.CharField(
+        max_length=20,
+        verbose_name="Телефон",
+        unique=True,
+        blank=True,
+        null=True  # обязательно null=True, иначе БД будет требовать значение
+    )
+    email = models.EmailField(verbose_name="Email", blank=True, null=True)
+    slug = models.SlugField(max_length=150, unique=True, blank=True)
+    birthday = models.DateField(blank=True, null=True, verbose_name="Дата рождения")
     is_verified_email = models.BooleanField(default=False)
-    address = models.CharField(max_length=150, blank=True, verbose_name='Адрес')
-    user_photo = models.ImageField(upload_to='user_photo/%Y/%m/%d/', verbose_name='Аватарка', blank=True, null=True)
+    address = models.CharField(max_length=150, blank=True, verbose_name="Адрес")
+    user_photo = models.ImageField(upload_to='user_photo/%Y/%m/%d/', blank=True, null=True)
 
     class Meta:
         verbose_name = 'User'

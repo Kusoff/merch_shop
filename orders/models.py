@@ -17,11 +17,13 @@ class Order(models.Model):
     PAID = 1
     ON_WAY = 2
     DELIVERED = 3
+    CANCELLED = 4
     STATUSES = (
         (CREATED, 'Создан'),
         (PAID, 'Оплачен'),
         (ON_WAY, 'В пути'),
         (DELIVERED, 'Доставлен'),
+        (CANCELLED, 'Отменён'),
     )
 
     first_name = models.CharField(max_length=64)
