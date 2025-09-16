@@ -49,14 +49,20 @@ class ProductImagesSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     product_photos = ProductImagesSerializer(many=True, read_only=True)
     product_characteristic = CharacteristicSerializer(many=True, read_only=True)
+
     category = CategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), source='category', write_only=True
+    )
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'first_price', 'discount', 'last_price', 'slug', 'description', 'category', 'stock',
-            'available', 'created', 'updated', 'product_photos', 'product_characteristic'
+            'id', 'name', 'first_price', 'discount', 'last_price', 'slug', 'description',
+            'category', 'category_id', 'stock', 'available', 'created', 'updated',
+            'product_photos', 'product_characteristic'
         ]
+        read_only_fields = ['last_price']
 
 
 class BasketSerializer(serializers.ModelSerializer):

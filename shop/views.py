@@ -48,7 +48,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    ppermission_classes = [AllowAny]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]  # все могут смотреть
+        return [IsAdminUser()]  # создавать/редактировать/удалять может только админ
 
 
 class BasketViewSet(viewsets.ModelViewSet):

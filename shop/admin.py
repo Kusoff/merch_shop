@@ -59,10 +59,17 @@ class ProductImagesAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
-    'name', 'first_price', 'discount', 'last_price', 'category', 'stock', 'available', 'created', 'updated')
+        'name', 'first_price', 'discount', 'last_price_display',
+        'category', 'stock', 'available', 'created', 'updated'
+    )
     list_filter = ('available', 'category')
     search_fields = ('name', 'slug', 'category__name')
     filter_horizontal = ('product_photos', 'product_characteristic')
+
+    def last_price_display(self, obj):
+        return obj.last_price
+    last_price_display.short_description = "Конечная цена"
+
 
 
 # ---------------- Characteristic -----------------

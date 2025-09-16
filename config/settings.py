@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -145,3 +146,27 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Merch Shop Admin",
+    "site_header": "Merch Shop",
+    "site_brand": "MerchShop",
+    "welcome_sign": "Добро пожаловать в админку!",
+    "copyright": "Merch Shop © 2025",
+    "search_model": "auth.User",
+    "user_avatar": None,
+    "topmenu_links": [
+        {"name": "Главная", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Магазин", "url": "/admin/shop/product/", "permissions": ["shop.view_product"]},
+        {"name": "Заказы", "url": "/admin/orders/order/", "permissions": ["orders.view_order"]},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [],
+    "hide_models": [],
+}
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # для collectstatic
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'

@@ -1,29 +1,18 @@
-from autoslug.fields import AutoSlugField
-from django.contrib.auth.models import AbstractUser
 from django.core.mail import send_mail
-from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
 from django.conf import settings
 from sortedm2m.fields import SortedManyToManyField
 
-from django.utils.text import slugify
-
 from django.contrib.auth.models import AbstractUser
-from django.utils.text import slugify
 from django.db import models
+from django.utils.text import slugify
 
 
 class Users(AbstractUser):
-    phone = models.CharField(
-        max_length=20,
-        verbose_name="Телефон",
-        unique=True,
-        blank=True,
-        null=True  # обязательно null=True, иначе БД будет требовать значение
-    )
-    email = models.EmailField(verbose_name="Email", blank=True, null=True)
-    slug = models.SlugField(max_length=150, unique=True, blank=True)
+    phone = models.CharField(max_length=20, verbose_name="Телефон", unique=True, blank=True, null=True)
+    email = models.EmailField(verbose_name="Email", unique=True, blank=True, null=True)
+    slug = models.SlugField(max_length=250, unique=True, blank=True)
     birthday = models.DateField(blank=True, null=True, verbose_name="Дата рождения")
     is_verified_email = models.BooleanField(default=False)
     address = models.CharField(max_length=150, blank=True, verbose_name="Адрес")
@@ -34,8 +23,8 @@ class Users(AbstractUser):
         verbose_name_plural = 'Users'
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.username)
+        if not self.slug and self.username:
+            self.slug = slugify(self.username, allow_unicode=True)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -82,7 +71,7 @@ class Characteristic(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=250, unique=True)
-    slug = models.SlugField(max_length=250, unique=True)
+    slug = models.SlugField(max_length=250, unique=True, blank=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='category', blank=True)
 
@@ -90,6 +79,11 @@ class Category(models.Model):
         ordering = ('name',)
         verbose_name = 'category'
         verbose_name_plural = 'categories'
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            self.slug = slugify(self.name, allow_unicode=True)
+        super().save(*args, **kwargs)
 
     def get_url(self):
         return reverse('products_by_category', args=[self.id])
@@ -102,56 +96,70 @@ class Product_Images(models.Model):
     img_name = models.CharField(max_length=50, verbose_name='Картинка изображения', blank=True)
     img = models.ImageField(upload_to='img_product/%Y/%m/%d/', verbose_name='Изображение продукта')
     first_img = models.BooleanField(default=False, verbose_name='Главная картинка')
-    slug = models.SlugField(max_length=50, unique=True, db_index=True, verbose_name='URL')
-
-    def __str__(self):
-        return self.img_name
+    slug = models.SlugField(max_length=250, unique=True, blank=True)
 
     class Meta:
         verbose_name = 'Фотография продукта'
         verbose_name_plural = 'Фотографии продуктов'
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.img_name:
+            self.slug = slugify(self.img_name, allow_unicode=True)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.img_name
 
 
 class Product(models.Model):
     name = models.CharField(max_length=250, unique=True)
     first_price = models.IntegerField(verbose_name='Первоначальная цена', default=0)
     discount = models.FloatField(verbose_name='Скидка', default=0, blank=True)
-    last_price = models.IntegerField(verbose_name='Конечная цена', blank=True, null=True)
-    slug = models.SlugField(max_length=250, unique=True)
+    slug = models.SlugField(max_length=250, unique=True, blank=True)
     description = models.TextField(blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey('Category', on_delete=models.CASCADE)
     stock = models.IntegerField()
     available = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    product_photos = SortedManyToManyField(Product_Images, verbose_name='Изображения')
-    product_characteristic = SortedManyToManyField(Characteristic, verbose_name='Характеристики')
+    product_photos = SortedManyToManyField('Product_Images', verbose_name='Изображения')
+    product_characteristic = SortedManyToManyField('Characteristic', verbose_name='Характеристики')
 
     class Meta:
         ordering = ('name',)
         verbose_name = 'product'
         verbose_name_plural = 'products'
 
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            self.slug = slugify(self.name, allow_unicode=True)
+        super().save(*args, **kwargs)
+
+    @property
+    def last_price(self):
+        if self.discount > 0:
+            return int(self.first_price * (1 - self.discount / 100))
+        return self.first_price
+
     def get_url(self):
         return reverse('product_detail', args=[self.category.id, self.slug])
-
-    def save(self, *args, **kwargs):
-        if self.discount > 0:
-            self.last_price = int(self.first_price * (1 - self.discount / 100))
-        else:
-            self.last_price = self.first_price
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
 
 
 class BasketQuerySet(models.QuerySet):
-    def total_sum(self):
-        return sum(basket.sum() for basket in self)
+    def total_sum(self, user=None):
+        qs = self
+        if user is not None:
+            qs = qs.filter(user=user)
+        return sum(basket.sum() for basket in qs)
 
-    def total_quantity(self):
-        return sum(basket.quantity for basket in self)
+    def total_quantity(self, user=None):
+        qs = self
+        if user is not None:
+            qs = qs.filter(user=user)
+        return sum(basket.quantity for basket in qs)
 
 
 class Basket(models.Model):
@@ -197,11 +205,16 @@ class Discount_For_Product_Category(models.Model):
     discount_percentage = models.FloatField(verbose_name='Скидка')
     discount_start_date = models.DateField(verbose_name='Начало скидок', auto_now_add=True)
     discount_end_date = models.DateField(verbose_name='Конец скидок')
-    slug = models.SlugField(max_length=100, unique=True, db_index=True, verbose_name='URL')
+    slug = models.SlugField(max_length=250, unique=True, blank=True)
 
     class Meta:
         verbose_name = 'Скидка на категорию продукта'
         verbose_name_plural = 'Скидки на категории продуктов'
+
+    def save(self, *args, **kwargs):
+        if not self.slug and self.category:
+            self.slug = slugify(self.category.name, allow_unicode=True)
+        super().save(*args, **kwargs)
 
 
 class Comments(models.Model):

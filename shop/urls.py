@@ -10,10 +10,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 router = DefaultRouter()
 router.register(r'users', UsersViewSet, basename='users')
 router.register(r'categories', CategoryViewSet)
-router.register(r'products', ProductViewSet)
+router.register(r'products', ProductViewSet, basename='products')
 router.register(r'basket', BasketViewSet, basename='basket')
 router.register(r'discounts', DiscountViewSet)
-router.register(r'comments', CommentsViewSet)
+router.register(r'comments', CommentsViewSet, basename='comments')
 router.register(r'characteristics', CharacteristicViewSet)
 router.register(r'product-images', ProductImagesViewSet)
 
